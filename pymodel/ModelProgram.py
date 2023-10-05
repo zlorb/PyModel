@@ -10,7 +10,7 @@ import copy
 import inspect
 import itertools
 from pymodel.model import Model
-import collections
+import collections, collections.abc
 import pprint
 
 DEBUG = False
@@ -69,7 +69,7 @@ class ModelProgram(Model):
     """
     Parameter generator: return list of all args combos for action symbol a
     """
-    arginfo = inspect.getargspec(a)# ArgInfo(args,varargs,keywords,locals)
+    arginfo = inspect.getfullargspec(a)# ArgInfo(args,varargs,keywords,locals)
     if arginfo[0]:
       args = arginfo[0] # usual case: fixed sequence of positional arguments
     elif arginfo[1]:
@@ -77,7 +77,7 @@ class ModelProgram(Model):
     else:
       args = () # no arguments anywhere, args must have this value
     domains = [ self.module.domains[a][arg]() # evaluate state-dependent domain
-                if isinstance(self.module.domains[a][arg], collections.Callable) 
+                if isinstance(self.module.domains[a][arg], collections.abc.Callable)
                 else self.module.domains[a][arg] # look up static domain
                 for arg in args if a in self.module.domains ]
     combination = self.module.combinations.get(a, 'all')  # default is 'all'
@@ -125,7 +125,7 @@ class ModelProgram(Model):
     else:
       # Assumes enablers[a] has only one item, always true in this version
       a_enabled = self.module.enablers[a][0]
-      nparams = len(inspect.getargspec(a_enabled)[0])
+      nparams = len(inspect.getfullargspec(a_enabled)[0])
       nargs = len(args)
       # nparams == 0 means match any args
       if nparams > 0 and nparams != nargs:
